@@ -40,7 +40,8 @@ router.post('/send', async (req, res) =>{
     if(!uuid || !emailTo || !emailFrom) {
         return res.status(422).send({ error: 'All fields are required except expiry.'});
     }
-    // Get data from database 
+    // Get data from database
+    try { 
       const file = await File.findOne({ uuid: uuid });
       if(file.sender) {
         return res.status(422).send({ error: 'Email already sent once.'});
@@ -62,9 +63,14 @@ router.post('/send', async (req, res) =>{
                   expires: '24 hours'
               })
              
-      }); 
-      return res.send({success:true});
-     
+      }).then(() => {
+        return res.json({success: true});
+      }).catch(err => {
+        return res.status(500).json({error: 'Error in email sending.'});
+      });
+  } catch(err) {
+    return res.status(500).send({ error: 'Something went wrong.'});
+  }
   
   });
 module.exports = router;
